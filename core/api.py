@@ -6,18 +6,23 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.exceptions import MethodNotAllowed
 
 from core.forms import (
     AddCourseForm,
     AddDepartmentForm,
     AddVenueCategoryForm,
     AddVenueForm,
+    AddStaffForm,
 )
 
-from core.models import Course, Department, Venue, VenueCategory
+from core.models import Course, Department, Staff, Venue, VenueCategory
 from core.serializers import (
     CourseSerializer,
     DepartmentSerializer,
+    PlainCourseSerializer,
+    PlainStaffSerializer,
+    StaffSerializer,
     VenueCategorySerializer,
     VenueSerializer,
 )
@@ -55,6 +60,22 @@ class CourseViewSet(ViewSet):
         return Response(
             status=status.HTTP_201_CREATED, data=CourseSerializer(course).data
         )
+
+    @action(detail=False, methods=("POST", "DELETE"))
+    def multiple(self, request: Request):
+        request_method = request._request.method
+
+        courses_pks: list[int] = request.data  # type: ignore
+
+        if request_method == "POST":
+            timetables = Course.objects.filter(Q(pk__in=courses_pks))
+            return Response(CourseSerializer(timetables, many=True).data)
+        elif request_method == "DETETE":
+            timetables = Course.objects.filter(Q(pk__in=courses_pks))
+            timetables.delete()
+            return Response(CourseSerializer(timetables, many=True).data)
+        else:
+            raise MethodNotAllowed(method=request_method)
 
     @action(methods=("DELETE",), detail=False)
     def multiple_delete(self, request: Request):
@@ -108,7 +129,37 @@ class DepartmentViewSet(ViewSet):
         return Response(DepartmentSerializer(department).data)
 
     def retrieve(self, request: Request, pk=None):
-        return Response({"Details": "Hello"})
+        try:
+            department = Department.objects.get(pk=pk)
+            staffs = Staff.objects.filter(department=department)
+            courses = Course.objects.filter(department=department)
+            return Response(
+                {
+                    **DepartmentSerializer(department).data,
+                    "staffs": PlainStaffSerializer(staffs, many=True).data,
+                    "courses": PlainCourseSerializer(courses, many=True).data,
+                }
+            )
+        except Department.DoesNotExist:
+            return Response(
+                {"Details": "Department not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=False, methods=("POST", "DELETE"))
+    def multiple(self, request: Request):
+        request_method = request._request.method
+
+        departments_pks: list[int] = request.data  # type: ignore
+
+        if request_method == "POST":
+            timetables = Department.objects.filter(Q(pk__in=departments_pks))
+            return Response(DepartmentSerializer(timetables, many=True).data)
+        elif request_method == "DETETE":
+            timetables = Department.objects.filter(Q(pk__in=departments_pks))
+            timetables.delete()
+            return Response(DepartmentSerializer(timetables, many=True).data)
+        else:
+            raise MethodNotAllowed(method=request_method)
 
     @action(methods=("DELETE",), detail=False)
     def multiple_delete(self, request: Request):
@@ -145,6 +196,28 @@ class DepartmentViewSet(ViewSet):
 
         return Response(DepartmentSerializer(departments, many=True).data)
 
+    @action(detail=True)
+    def courses(self, request: Request, pk = None):
+        try:
+            department = Department.objects.get(pk=pk)
+            courses = Course.objects.filter(department = department)
+            return Response(CourseSerializer(courses, many = True).data)
+        except Department.DoesNotExist:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={"details": "Department not found"},
+            )
+    @action(detail=True)
+    def staffs(self, request: Request, pk = None):
+        try:
+            department = Department.objects.get(pk=pk)
+            staffs = Staff.objects.filter(department = department)
+            return Response(StaffSerializer(staffs, many = True).data)
+        except Department.DoesNotExist:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={"details": "Department not found"},
+            )
 
 class VenueViewSet(ViewSet):
     def list(self, request: Request):
@@ -207,6 +280,22 @@ class VenueViewSet(ViewSet):
             status=status.HTTP_201_CREATED, data=VenueSerializer(venue).data
         )
 
+    @action(detail=False, methods=("POST", "DELETE"))
+    def multiple(self, request: Request):
+        request_method = request._request.method
+
+        venues_pk: list[int] = request.data  # type: ignore
+
+        if request_method == "POST":
+            timetables = Venue.objects.filter(Q(pk__in=venues_pk))
+            return Response(VenueSerializer(timetables, many=True).data)
+        elif request_method == "DETETE":
+            timetables = Venue.objects.filter(Q(pk__in=venues_pk))
+            timetables.delete()
+            return Response(VenueSerializer(timetables, many=True).data)
+        else:
+            raise MethodNotAllowed(method=request_method)
+
     @action(methods=("DELETE",), detail=False)
     def multiple_delete(self, request: Request):
         """
@@ -226,3 +315,71 @@ class VenueViewSet(ViewSet):
         venues.delete()
 
         return Response(VenueSerializer(venues, many=True).data)
+
+
+class StafftViewSet(ViewSet):
+    def list(self, request: Request):
+        staffs = Staff.objects.all()
+        queries = request.query_params
+        query = queries.get("q", None)
+        if query:
+            staffs = staffs.filter(Q(title__contains=query) | Q(code__contains=query))
+        return Response(StaffSerializer(staffs, many=True).data)
+
+    def create(self, request: Request):
+        form = AddStaffForm(request.data)  # type: ignore
+        if not form.is_valid():
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={
+                    "details": "Invalid form",
+                    "errors": form.errors,
+                    "fields": form.errors.keys(),
+                },
+            )
+
+        staff = form.save()
+        return Response(StaffSerializer(staff).data)
+
+    def retrieve(self, request: Request, pk=None):
+        try:
+            staff = Staff.objects.get(pk=pk)
+            return Response(StaffSerializer(staff).data)
+        except Staff.DoesNotExist:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND, data={"details": "Staff not found"}
+            )
+
+    @action(detail=False, methods=("POST", "DELETE"))
+    def multiple(self, request: Request):
+        request_method = request._request.method
+
+        staffs_pks: list[int] = request.data  # type: ignore
+
+        if request_method == "POST":
+            staffs = Staff.objects.filter(Q(pk__in=staffs_pks))
+            return Response(StaffSerializer(staffs, many=True).data)
+        elif request_method == "DETETE":
+            staffs = Staff.objects.filter(Q(pk__in=staffs_pks))
+            staffs.delete()
+            return Response(StaffSerializer(staffs, many=True).data)
+        else:
+            raise MethodNotAllowed(method=request_method)
+
+    def delete(self, request: Request, pk=None):
+        try:
+            staff = Staff.objects.get(pk=pk)
+            staff.delete()
+            return Response(StaffSerializer(staff).data)
+        except Staff.DoesNotExist:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={"details": "Staff not found"},
+            )
+
+    @action(detail=False)
+    def get_by_staff_id(self, request: Request):
+        code = request.query_params.get("staff_id", None)
+        staffs = Staff.objects.filter(Q(code__iexact=code))
+
+        return Response(StaffSerializer(staffs, many=True).data)

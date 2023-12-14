@@ -1,6 +1,6 @@
 from django import forms
 
-from core.models import Department, Course, Venue
+from core.models import Department, Course, Staff, Venue
 
 
 class AddDepartmentForm(forms.ModelForm):
@@ -24,3 +24,9 @@ class AddVenueForm(forms.ModelForm):
 
 class AddVenueCategoryForm(forms.Form):
     title = forms.CharField()
+
+class AddStaffForm(forms.ModelForm):
+
+    class Meta:
+        model = Staff 
+        fields = ('name', 'staff_id', 'department', 'can_supervise', 'can_invigilate', )

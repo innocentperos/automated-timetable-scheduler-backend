@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from core.models import Course, Department, Venue, VenueCategory
+from core.models import Course, Department, Staff, Venue, VenueCategory
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -11,6 +11,22 @@ class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
         fields = "__all__"
+
+
+class PlainCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = (
+            "title",
+            "code",
+            "student_count",
+            "department",
+            "departments",
+            "pk",
+            "level",
+            "level",
+            "semester",
+        )
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -47,4 +63,21 @@ class VenueSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Venue
+        fields = "__all__"
+
+
+class PlainStaffSerializer(serializers.ModelSerializer):
+    pk = serializers.IntegerField()
+
+    class Meta:
+        model = Staff
+        fields = "__all__"
+
+
+class StaffSerializer(serializers.ModelSerializer):
+    pk = serializers.IntegerField()
+    department = DepartmentSerializer()
+
+    class Meta:
+        model = Staff
         fields = "__all__"
