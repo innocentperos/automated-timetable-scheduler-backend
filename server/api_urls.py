@@ -1,14 +1,25 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-from core.api import StafftViewSet, courses, CourseViewSet, DepartmentViewSet, VenueViewSet
+from core.api import (
+    StafftViewSet,
+    CourseViewSet,
+    DepartmentViewSet,
+    VenueViewSet,
+)
 
-from timetable.api import TimetableViewSet
+from timetable.api import (
+    TimetableViewSet,
+    SlotCourseViewSet,
+    SlotViewSet,
+    ComplainViewSet,
+)
+
+from account.api import (
+    AccountViewset
+)
 
 urlpatterns = [
-    path(
-        "courses/",
-        courses,
-    )
+    
 ]
 
 router = DefaultRouter()
@@ -19,3 +30,9 @@ router.register("staffs", StafftViewSet, basename="staffs")
 
 
 router.register("timetables", TimetableViewSet, basename="timetables")
+router.register("slot_courses", SlotCourseViewSet, basename="slot_Courses")
+router.register("slots", SlotViewSet, basename="timetable_slots")
+
+router.register("complains", ComplainViewSet, basename="complains")
+
+router.register("accounts", AccountViewset, basename="accounts")

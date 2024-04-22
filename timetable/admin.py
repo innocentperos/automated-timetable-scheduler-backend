@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from timetable.models import Timetable, TimetableSlot, SlotCourse
+from timetable.models import Complain, Timetable, TimetableSlot, SlotCourse
 
 
 # Register your models here.
@@ -21,3 +21,8 @@ class TimetableSlotAdminModel(admin.ModelAdmin):
 @admin.register(SlotCourse)
 class SlotCourseAdminModel(admin.ModelAdmin):
     list_display = ("course", "slot", "supervisor",)
+
+@admin.register(Complain)
+class ComplainAdminModel(admin.ModelAdmin):
+    list_display = ('slot_course','user','resolved',)
+    

@@ -14,6 +14,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
 
 class PlainCourseSerializer(serializers.ModelSerializer):
+    department = DepartmentSerializer()
     class Meta:
         model = Course
         fields = (
@@ -60,6 +61,13 @@ class VenueCategorySerializer(serializers.ModelSerializer):
 class VenueSerializer(serializers.ModelSerializer):
     pk = serializers.IntegerField()
     category = VenueCategorySerializer()
+
+    class Meta:
+        model = Venue
+        fields = "__all__"
+        
+class PlainVenueSerializer(serializers.ModelSerializer):
+    pk = serializers.IntegerField()
 
     class Meta:
         model = Venue

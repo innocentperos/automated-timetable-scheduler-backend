@@ -82,6 +82,11 @@ class Course(models.Model):
     departments = models.ManyToManyField(
         Department,
     )
+    
+    def get_department_count(self):
+        return self.departments.count()
+    
+    
 
     def __str__(self):
         return f"{self.title} ({self.code})"
@@ -101,6 +106,7 @@ class Staff(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.department.code})"
+    
 
     class Meta:
         verbose_name_plural = "Staff"

@@ -22,4 +22,5 @@ from server import api_urls
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(api_urls.router.urls)),
+    path("debug/",include("debug.urls"))
 ]

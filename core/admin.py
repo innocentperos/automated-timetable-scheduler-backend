@@ -13,6 +13,10 @@ class DepartmentAdminModel(admin.ModelAdmin):
 @admin.register(Course)
 class CourseAdminModel(admin.ModelAdmin):
     list_display = ("id", "title", "code", "level", "student_count", "shared")
+    
+    filter_horizontal = ["departments"]
+    filter_vertical =["departments"]
+    list_filter =["level","semester","departments"]
 
     @admin.display(boolean=True, )
     def shared(self, model: Course):
