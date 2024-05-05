@@ -88,7 +88,7 @@ class TimetableViewSet(ViewSet):
         if request_method == "POST":
             timetables = Timetable.objects.filter(Q(pk__in=timetable_pks))
             return Response(TimetableSerializer(timetables, many=True).data)
-        elif request_method == "DETETE":
+        elif request_method == "DELETE":
             if not userIsAdmin(request):
                 raise PermissionDenied("Only admin users can delete timetables")
 
@@ -636,9 +636,10 @@ class TimetableViewSet(ViewSet):
     def generate(self, request: Request, pk=None):
         try:
             timetable = Timetable.objects.get(pk=pk)
-            
+            result = timetable.generate()
+            timetable.auto_assign_invigilators()
             return Response(
-                timetable.generate()
+                result
             )
 
         except Timetable.DoesNotExist:
@@ -755,7 +756,21 @@ class TimetableViewSet(ViewSet):
                 data={"details": "Timetable not found"},
             )
         
-
+    @action(detail=True, methods=("GET",), permission_classes=(AllowAny,))
+    def set_current(self, request: Request, pk = None):
+        
+        try:
+            timetable = Timetable.objects.get(pk = pk)
+            Timetable.objects.filter(is_current = True).update(is_current = False)
+            timetable.is_current = True 
+            timetable.save()
+            
+            return Response(TimetableSerializer(timetable).data)
+        
+        except Timetable.DoesNotExist:
+            return Response( status = status.HTTP_404_NOT_FOUND, data = {
+                "details":"Timetable was not found"
+            })
 
 class SlotCourseViewSet(ViewSet):
     def retrieve(self, request: Request, pk=None):
