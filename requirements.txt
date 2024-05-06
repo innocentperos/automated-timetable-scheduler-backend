@@ -1,14 +1,7 @@
 ﻿Django==5.0
 django-cors-headers==4.3.1
-django-filter==23.5
 djangorestframework==3.14.0
-et-xmlfile==1.1.0
-Markdown==3.5.1
-openpyxl==3.1.2
-Pygments==2.17.2
 python-dateutil==2.8.2
-pytz==2023.3.post1
-pyzmq==25.1.2
 six==1.16.0
 sqlparse==0.4.4
 tzdata==2023.4
